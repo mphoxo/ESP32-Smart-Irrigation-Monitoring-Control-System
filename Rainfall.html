@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/style.css">
+  <title>Rainfall Sensor</title>
+</head>
+<body>
+<div class="sensor-page">
+  <a href="/admindashboard" class="back-link">← Dashboard</a>
+
+  <h1>Rainfall Sensor</h1>
+  <p>Live readings from the rain sensor</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.25rem;">
+    <div class="value-box">
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:.3rem;">STATUS</p>
+      <div class="big-value" style="font-size:2rem;" id="status">--</div>
+      <div id="badge" class="status-badge badge-blue" style="margin-top:.5rem;">Waiting…</div>
+    </div>
+    <div class="value-box">
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:.3rem;">RAW ADC VALUE</p>
+      <div class="big-value"><span id="raw">--</span></div>
+      <p style="font-size:.8rem;margin-top:.4rem;">(0 – 4095)</p>
+    </div>
+  </div>
+  <div class="last-updated" id="ts"></div>
+
+  <div class="chart-box">
+    <h2>Last 20 Rainfall Sensor values over Time</h2>
+    <canvas id="chart" height="160"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const chart = new Chart(document.getElementById('chart').getContext('2d'), {
+  type: 'line',
+  data: { labels: [], datasets: [{ label: 'ADC Value', data: [],
+    borderColor: '#1565c0', backgroundColor: 'rgba(21,101,192,.12)',
+    tension: .35, fill: true, pointRadius: 3 }] },
+  options: {
+    animation: false,
+    scales: {
+      x: {
+        title: { display: true, text: 'Time', color: '#757575', font: { size: 12 } },
+        ticks: { maxTicksLimit: 6 }
+      },
+      y: {
+        min: 0, max: 4095,
+        title: { display: true, text: 'ADC Raw Value (0–4095)', color: '#757575', font: { size: 12 } }
+      }
+    },
+    plugins: { legend: { display: false } }
+  }
+});
+
+function loadRain() {
+  fetch('/get_sensor/rainfall').then(r => r.json()).then(d => {
+    const status = d.status;
+    const raw    = d.value;
+    if (!status) return;
+
+    document.getElementById('status').textContent = status;
+    document.getElementById('raw').textContent    = raw !== null ? raw : '--';
+    document.getElementById('ts').textContent     = 'Updated: ' + new Date().toLocaleTimeString();
+
+    const badge = document.getElementById('badge');
+    if (status === 'Raining') {
+      badge.textContent = 'Raining';
+      badge.className   = 'status-badge badge-blue';
+    } else {
+      badge.textContent = 'Not Raining';
+      badge.className   = 'status-badge badge-green';
+    }
+  });
+}
+
+function loadHistory() {
+  fetch('/history/rainfall').then(r => r.json()).then(rows => {
+    chart.data.labels = rows.map(r => r.ts);
+    chart.data.datasets[0].data = rows.map(r => parseFloat(r.val));
+    chart.update();
+  });
+}
+
+loadRain();    setInterval(loadRain,    2000);
+loadHistory(); setInterval(loadHistory, 10000);
+</script>
+</body>
+</html>

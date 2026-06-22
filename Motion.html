@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/style.css">
+  <title>PIR Motion Sensor</title>
+  <style>
+    .motion-icon {
+      font-size: 5rem;
+      transition: opacity .3s;
+      display: block;
+      text-align: center;
+      margin: .5rem 0;
+    }
+    .motion-icon.idle { opacity: .25; }
+  </style>
+</head>
+<body>
+<div class="sensor-page">
+  <a href="/admindashboard" class="back-link">← Dashboard</a>
+
+  <h1>PIR Motion Sensor</h1>
+  <p>Live detection status from the PIR sensor</p>
+
+  <div class="value-box" style="margin-top:1.25rem;">
+    <span class="motion-icon idle" id="icon"></span>
+    <div class="big-value" id="val" style="font-size:2rem;">--</div>
+    <div id="badge" class="status-badge badge-blue" style="margin-top:.75rem;">Waiting…</div>
+    <div class="last-updated" id="ts"></div>
+  </div>
+
+  <div class="chart-box">
+    <h2>Last 20 Motion Events</h2>
+    <div id="log" style="max-height:260px;overflow-y:auto;font-size:.9rem;"></div>
+  </div>
+</div>
+
+<script>
+function loadMotion() {
+  fetch('/get_sensor/pir_motion').then(r => r.json()).then(d => {
+    // PIR sends the status inside "distance" key
+    const v = d.distance || d.status;
+    if (!v) return;
+
+    document.getElementById('val').textContent = v;
+    document.getElementById('ts').textContent  = 'Updated: ' + new Date().toLocaleTimeString();
+
+    const icon  = document.getElementById('icon');
+    const badge = document.getElementById('badge');
+
+    if (v === 'Detected') {
+      icon.className   = 'motion-icon';
+      badge.textContent = 'Motion Detected!';
+      badge.className   = 'status-badge badge-red';
+    } else {
+      icon.className    = 'motion-icon idle';
+      badge.textContent = 'No Motion';
+      badge.className   = 'status-badge badge-green';
+    }
+  });
+}
+
+function loadHistory() {
+  fetch('/history/pir_motion').then(r => r.json()).then(rows => {
+    const log = document.getElementById('log');
+    log.innerHTML = rows.reverse().map(r =>
+      `<div style="padding:.35rem 0;border-bottom:1px solid #eee;">
+        <span style="color:var(--muted);font-size:.8rem;">${r.ts}</span>
+        &nbsp;
+        <span style="font-weight:600;color:${r.val==='Detected'?'var(--red)':'var(--green)'}">
+          ${r.val}
+        </span>
+      </div>`
+    ).join('');
+  });
+}
+
+loadMotion();  setInterval(loadMotion,  1000);
+loadHistory(); setInterval(loadHistory, 5000);
+</script>
+</body>
+</html>

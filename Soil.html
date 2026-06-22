@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/style.css">
+  <title>Soil Moisture</title>
+</head>
+<body>
+<div class="sensor-page">
+  <a href="/admindashboard" class="back-link">← Dashboard</a>
+
+  <h1>Soil Moisture</h1>
+  <p>Live reading from the soil moisture sensor over time</p>
+
+  <div class="value-box" style="margin-top:1.25rem;">
+    <div class="big-value"><span id="val">--</span><span class="unit">%</span></div>
+    <div class="progress-wrap" style="margin-top:1rem;">
+      <div class="progress-fill" id="bar" style="width:0%"></div>
+    </div>
+    <div id="badge" class="status-badge badge-blue" style="margin-top:.75rem;">Waiting…</div>
+    <div class="last-updated" id="ts"></div>
+  </div>
+
+  <div class="chart-box">
+    <h2>Last 20 Readings of Soil Moisture Percentage over Time</h2>
+    <canvas id="chart" height="160"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const ctx = document.getElementById('chart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: { labels: [], datasets: [{ label: 'Soil Moisture %', data: [],
+    borderColor: '#2e7d32', backgroundColor: 'rgba(46,125,50,.12)',
+    tension: .35, fill: true, pointRadius: 3 }] },
+  options: {
+    animation: false,
+    scales: {
+      x: {
+        title: { display: true, text: 'Time', color: '#757575', font: { size: 12 } },
+        ticks: { maxTicksLimit: 6 }
+      },
+      y: {
+        min: 0, max: 100,
+        title: { display: true, text: 'Moisture (%)', color: '#757575', font: { size: 12 } }
+      }
+    },
+    plugins: { legend: { display: false } }
+  }
+});
+
+function loadSoil() {
+  fetch('/get_sensor/soil').then(r => r.json()).then(d => {
+    const v = d.distance;
+    if (v === null || v === undefined) return;
+    const val = parseFloat(v);
+    document.getElementById('val').textContent = val.toFixed(1);
+    document.getElementById('bar').style.width = val + '%';
+    document.getElementById('ts').textContent  = 'Updated: ' + new Date().toLocaleTimeString();
+
+    const badge = document.getElementById('badge');
+    if (val > 80)      { badge.textContent='Well watered';   badge.className='status-badge badge-green'; }
+    else if (val < 40) { badge.textContent='Needs water';    badge.className='status-badge badge-red'; }
+    else               { badge.textContent='Normal';          badge.className='status-badge badge-amber'; }
+  });
+}
+
+function loadHistory() {
+  fetch('/history/soil').then(r => r.json()).then(rows => {
+    chart.data.labels   = rows.map(r => r.ts);
+    chart.data.datasets[0].data = rows.map(r => parseFloat(r.val));
+    chart.update();
+  });
+}
+
+loadSoil();    setInterval(loadSoil,    1000);
+loadHistory(); setInterval(loadHistory, 10000);
+</script>
+</body>
+</html>

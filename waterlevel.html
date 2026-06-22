@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/static/style.css">
+  <title>Water Level</title>
+</head>
+<body>
+<div class="sensor-page">
+  <a href="/admindashboard" class="back-link">← Dashboard</a>
+
+  <h1>Water Level</h1>
+  <p>Live reading from the ultrasonic sensor</p>
+
+  <div class="value-box" style="margin-top:1.25rem;">
+    <div class="big-value"><span id="val">--</span><span class="unit">%</span></div>
+    <div class="progress-wrap" style="margin-top:1rem;">
+      <div class="progress-fill" id="bar" style="width:0%"></div>
+    </div>
+    <div id="badge" class="status-badge badge-blue" style="margin-top:.75rem;">Waiting…</div>
+    <div class="last-updated" id="ts"></div>
+  </div>
+
+  <div class="chart-box">
+    <h2>Last 20 Readings of Water Level over Time</h2>
+    <canvas id="chart" height="160"></canvas>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const chart = new Chart(document.getElementById('chart').getContext('2d'), {
+  type: 'line',
+  data: { labels: [], datasets: [{ label: 'Water Level %', data: [],
+    borderColor: '#1565c0', backgroundColor: 'rgba(21,101,192,.12)',
+    tension: .35, fill: true, pointRadius: 3 }] },
+  options: {
+    animation: false,
+    scales: {
+      x: {
+        title: { display: true, text: 'Time', color: '#757575', font: { size: 12 } },
+        ticks: { maxTicksLimit: 6 }
+      },
+      y: {
+        min: 0, max: 100,
+        title: { display: true, text: 'Water Level (%)', color: '#757575', font: { size: 12 } }
+      }
+    },
+    plugins: { legend: { display: false } }
+  }
+});
+
+function loadWater() {
+  fetch('/get_sensor/waterlevel').then(r => r.json()).then(d => {
+    const v = d.distance;
+    if (v === null || v === undefined) return;
+    const val = parseFloat(v);
+    document.getElementById('val').textContent = val.toFixed(1);
+    document.getElementById('bar').style.width = val + '%';
+    document.getElementById('ts').textContent  = 'Updated: ' + new Date().toLocaleTimeString();
+
+    // colour the bar and badge based on level
+    const bar   = document.getElementById('bar');
+    const badge = document.getElementById('badge');
+    if (val < 30)      { bar.style.background='#c62828'; badge.textContent='Low – Refill!';  badge.className='status-badge badge-red'; }
+    else if (val <= 75){ bar.style.background='#f57f17'; badge.textContent='Medium';          badge.className='status-badge badge-amber'; }
+    else               { bar.style.background='#2e7d32'; badge.textContent='Full';             badge.className='status-badge badge-green'; }
+  });
+}
+
+function loadHistory() {
+  fetch('/history/waterlevel').then(r => r.json()).then(rows => {
+    chart.data.labels = rows.map(r => r.ts);
+    chart.data.datasets[0].data = rows.map(r => parseFloat(r.val));
+    chart.update();
+  });
+}
+
+loadWater();   setInterval(loadWater,   1000);
+loadHistory(); setInterval(loadHistory, 10000);
+</script>
+</body>
+</html>
