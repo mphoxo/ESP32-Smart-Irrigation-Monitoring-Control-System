@@ -1,0 +1,182 @@
+/* ── Reset & Base ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --green:      #2e7d32;
+  --green-light:#43a047;
+  --green-pale: #e8f5e9;
+  --blue:       #1565c0;
+  --blue-pale:  #e3f2fd;
+  --amber:      #f57f17;
+  --amber-pale: #fff8e1;
+  --red:        #c62828;
+  --red-pale:   #ffebee;
+  --card-bg:    #ffffff;
+  --body-bg:    #f1f8e9;
+  --text:       #212121;
+  --muted:      #757575;
+  --radius:     12px;
+  --shadow:     0 4px 20px rgba(0,0,0,.10);
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--body-bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Typography ──────────────────────────────────────────── */
+h1 { font-size: 1.8rem; font-weight: 700; color: var(--green); margin-bottom: .5rem; }
+h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: .35rem; }
+p  { color: var(--muted); font-size: .95rem; }
+
+/* ── Dashboard layout ────────────────────────────────────── */
+.dashboard-wrapper {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard-header img { width: 48px; }
+
+/* ── Card grid ───────────────────────────────────────────── */
+.container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  transition: transform .15s, box-shadow .15s;
+}
+.card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.14); }
+
+.card-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.card h2 { font-size: 1.05rem; color: var(--text); }
+.card p  { font-size: .85rem; }
+
+/* ── Sensor value display ────────────────────────────────── */
+.sensor-page {
+  max-width: 680px;
+  margin: 2.5rem auto;
+  padding: 0 1.25rem;
+}
+
+.value-box {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 1.25rem;
+}
+
+.big-value {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--green);
+  line-height: 1.1;
+}
+
+.unit { font-size: 1.4rem; color: var(--muted); margin-left: .2rem; }
+
+.status-badge {
+  display: inline-block;
+  margin-top: .75rem;
+  padding: .35rem 1rem;
+  border-radius: 999px;
+  font-size: .9rem;
+  font-weight: 600;
+}
+.badge-green  { background: var(--green-pale);  color: var(--green); }
+.badge-red    { background: var(--red-pale);    color: var(--red); }
+.badge-amber  { background: var(--amber-pale);  color: var(--amber); }
+.badge-blue   { background: var(--blue-pale);   color: var(--blue); }
+
+/* ── Progress bar ────────────────────────────────────────── */
+.progress-wrap {
+  background: #e0e0e0;
+  border-radius: 999px;
+  height: 14px;
+  overflow: hidden;
+  margin: .75rem 0 .4rem;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--green-light);
+  transition: width .6s ease;
+}
+
+/* ── History chart box ───────────────────────────────────── */
+.chart-box {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+}
+.chart-box h2 { margin-bottom: 1rem; font-size: 1rem; color: var(--muted); }
+
+/* ── Nav back link ───────────────────────────────────────── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  color: var(--green);
+  text-decoration: none;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  font-size: .95rem;
+}
+.back-link:hover { text-decoration: underline; }
+
+/* ── Button ──────────────────────────────────────────────── */
+.btn {
+  display: inline-block;
+  padding: .55rem 1.25rem;
+  border-radius: 8px;
+  background: var(--green);
+  color: #fff;
+  font-weight: 600;
+  font-size: .9rem;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: background .15s;
+  text-align: center;
+}
+.btn:hover { background: var(--green-light); }
+
+/* ── Last updated tag ────────────────────────────────────── */
+.last-updated {
+  font-size: .8rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: .5rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .big-value { font-size: 2.6rem; }
+}
